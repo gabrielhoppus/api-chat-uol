@@ -32,7 +32,7 @@ app.post("/participants"), async (req, res) => {
         name: Joi.string().required()
     })
 
-    const nameValidation = nameSchema.validate(name)
+    const nameValidation = nameSchema.validate({name})
 
     if (nameValidation){
         res.status(422).send("Insira um nome válido.")
