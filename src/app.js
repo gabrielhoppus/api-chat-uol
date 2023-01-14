@@ -76,7 +76,7 @@ app.get("/participants", (req, res) => {
 //post messages
 app.post("/messages", async (req, res) => {
     const { to, text, type } = req.body;
-    const from = req.headers.User;
+    const from = req.headers.user;
     const time = dayjs(Date.now()).format("hh:mm:ss");
     let nameCheck;
 
@@ -95,7 +95,7 @@ app.post("/messages", async (req, res) => {
     }
 
     try {
-        nameCheck = await db.collection("participants").findOne({ from })
+        nameCheck = await db.collection("participants").findOne({ name: from })
     } catch {
         console.log("Error checking user name");
         nameCheck = false;
@@ -121,17 +121,24 @@ app.post("/messages", async (req, res) => {
 });
 
 
-app.get("/messages", async (req, res) =>{
-    const { name } = req.headers;
+app.get("/messages", async (req, res) => {
+    const limit = Number(req.query.limit);
+    const { user } = req.headers;
     const messages = await db.collection("messages").find().toArray();
-    let userMessages = messages.filter((message) => 
-        message.user === name ||
+
+    // if (limit < 1 || isNaN(limit)) {
+    //     res.status(422).send("Limite inválido")
+    //     return;
+    // }
+
+    let userMessages = messages.filter((message) =>
+        message.user === user ||
         message.to === "Todos" ||
-        message.from === name ||
-        message.to === name ||
+        message.from === user ||
+        message.to === user ||
         message.type === "status"
     );
-
+    res.send(userMessages)
 })
 
 
