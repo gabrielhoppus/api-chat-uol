@@ -32,10 +32,10 @@ app.post("/participants", async (req, res) => {
         name: Joi.string().required()
     })
 
-    const nameValidation = nameSchema.validate({name})
+    const nameValidation = nameSchema.validate({ name })
 
-    if (!nameValidation){
-        res.status(422).send("Insira um nome válido.")
+    if (nameValidation.error) {
+        res.status(422).send(validation.error.details)
         return;
     }
 
@@ -49,9 +49,16 @@ app.post("/participants", async (req, res) => {
     if (nameCheck) {
         res.status(409).send("Esse usuário já está cadastrado, tente outro nome.");
     } else {
-        try{
+        try {
             const participant = { name, lastStatus: Date.now() };
             await db.collection("participants").insertOne(participant);
+            await db.collection("messages").insertOne({
+                from: name,
+                to: "Todos",
+                text: "entra na sala...",
+                type: "status",
+                time: date,
+            });
         } catch {
             console.log("Error adding user")
         }
