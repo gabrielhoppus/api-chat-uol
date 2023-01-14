@@ -34,7 +34,7 @@ app.post("/participants", async (req, res) => {
 
     const nameValidation = nameSchema.validate({name})
 
-    if (nameValidation){
+    if (!nameValidation){
         res.status(422).send("Insira um nome válido.")
         return;
     }
