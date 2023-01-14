@@ -76,7 +76,7 @@ app.get("/participants", (req, res) => {
 //post messages
 app.post("/messages", async (req, res) => {
     const { to, text, type } = req.body;
-    const from = req.headers.user;
+    const from = req.headers.User;
     const time = dayjs(Date.now()).format("hh:mm:ss");
     let nameCheck;
 
@@ -121,9 +121,19 @@ app.post("/messages", async (req, res) => {
 });
 
 
+app.get("/messages", async (req, res) =>{
+    const { name } = req.headers;
+    const messages = await db.collection("messages").find().toArray();
+    let userMessages = messages.filter((message) => 
+        message.user === name ||
+        message.to === "Todos" ||
+        message.from === name ||
+        message.to === name ||
+        message.type === "status"
+    );
 
-// //get messages
-// db.collection("messages").find().toArray().then();
+})
+
 
 
 
