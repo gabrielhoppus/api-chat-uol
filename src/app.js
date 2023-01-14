@@ -30,13 +30,12 @@ app.post("/participants", async (req, res) => {
 
     const nameSchema = Joi.object({
         name: Joi.string().required()
-    })
+    });
 
-    const nameValidation = nameSchema.validate({ name })
+    const nameValidation = nameSchema.validate({ name });
 
     if (nameValidation.error) {
-        res.status(422).send(validation.error.details)
-        return;
+        return res.status(422).send(nameValidation.error.details)
     }
 
     try {
@@ -62,7 +61,7 @@ app.post("/participants", async (req, res) => {
         } catch {
             console.log("Error adding user")
         }
-        res.status(201).send("Participante adicionado com sucesso")
+        res.status(201)
     }
 })
 
