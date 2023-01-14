@@ -1,6 +1,6 @@
 import express from "express";
 import cors from "cors";
-import { MongoClient, MongoClient } from "mongodb";
+import { MongoClient } from "mongodb";
 import dayjs from "dayjs";
 import dotenv from "dotenv";
 import Joi from "joi";
@@ -11,20 +11,20 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 
-const mongoClient = new MongoClient(process.env.DATABASE_URL);
+const client = new MongoClient(process.env.DATABASE_URL);
 let db;
 
-mongoClient.connect()
+client.connect()
     .then(() => {
-        db = mongoClient.db();
+        db = client.db("mydb");
         console.log("Sucesso");
     })
-    .catch(() => {
-        console.log("Erro!");
+    .catch((err) => {
+        console.log(err);
     });
 
 
-app.post("/participants"), async (req, res) => {
+app.post("/participants", async (req, res) => {
     const { name } = req.body;
     let nameCheck;
 
@@ -57,12 +57,12 @@ app.post("/participants"), async (req, res) => {
         }
         res.status(201).send("Participante adicionado com sucesso")
     }
-}
+})
 
-// //get participants
-// app.get("/participants", async (req, res) => {
-//     await db.collection("participants").find().toArray().then(dados => { return res.send(dados) }).catch(() => { res.status(500).send("Erro!") });
-// })
+//get participants
+app.get("/participants", (req, res) => {
+    db.collection("participants").find().toArray().then(dados => { return res.send(dados) }).catch(() => { res.status(500).send("Erro!") });
+})
 
 
 
