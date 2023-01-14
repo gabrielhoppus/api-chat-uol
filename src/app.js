@@ -108,10 +108,10 @@ app.post("/messages", async (req, res) => {
 
     try {
         await db.collection("messages").insertOne({
-            from,
             to,
             text,
             type,
+            from,
             time,
         });
         res.status(201).send("Mensagem enviada");
@@ -143,7 +143,11 @@ app.get("/messages", async (req, res) => {
         message.to === user ||
         message.type === "status"
     );
-    res.send(userMessages.splice(-limit))
+
+
+
+
+    res.send(userMessages.splice(-limit).reverse())
 
 })
 
