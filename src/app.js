@@ -152,23 +152,26 @@ app.post("/status", async (req, res) => {
     const userConnected = await db.collection("participants").findOne({ name: user });
     const participantStatus = { name: user, lastStatus: time };
 
-    if (!userConnected){
+    if (!userConnected) {
         res.status(404).send("Usuário não encontrado");
         return;
     }
 
-    try{
-        await db.collection("participants").updateOne({name: user}, {$set: participantStatus})
-        res.status(200).send("Participante atualizado com sucesso")
-    } catch{
-        console.log("Error updating user")
-    }
 
-
+    await db.collection("participants").updateOne({ name: user }, { $set: participantStatus })
+    res.status(200).send("Participante atualizado com sucesso")
 
 })
 
 
+// setInterval(
+//     async function removeInactive() {
+//         const status = Date.now();
+//         const time = dayjs(Date.now()).format("hh:mm:ss");
+//         const findInactive = await db.collection("participants").find({ lastStatus: { $lt: status - 10000 } })
+//     }
+
+//     , 15000)
 
 
 
