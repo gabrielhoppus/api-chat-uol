@@ -164,14 +164,21 @@ app.post("/status", async (req, res) => {
 })
 
 
-// setInterval(
-//     async function removeInactive() {
-//         const status = Date.now();
-//         const time = dayjs(Date.now()).format("hh:mm:ss");
-//         const findInactive = await db.collection("participants").find({ lastStatus: { $lt: status - 10000 } })
-//     }
+setInterval(
+    async function removeInactive() {
+        const status = Date.now();
+        const time = dayjs(Date.now()).format("hh:mm:ss");
+        const findInactive = await db.collection("participants")
+            .find({ lastStatus: { $lt: status - 10000 } }).toArray();
 
-//     , 15000)
+        findInactive.forEach(async (user) => {
+            await db.collection("participants")
+                .deleteOne({ name: user.name });
+            await db.collection("messages")
+                .insertOne({ from: user.name, to: "Todos", text: "sai da sala...", type: "status", time: time, });
+        })
+    }
+    , 15000)
 
 
 
