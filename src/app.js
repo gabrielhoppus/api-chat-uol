@@ -73,7 +73,7 @@ app.get("/participants", (req, res) => {
     db.collection("participants").find().toArray().then(dados => { return res.send(dados) }).catch(() => { res.status(500).send("Erro!") });
 })
 
-//post messages
+
 app.post("/messages", async (req, res) => {
     const { to, text, type } = req.body;
     const from = req.headers.user;
@@ -122,14 +122,19 @@ app.post("/messages", async (req, res) => {
 
 
 app.get("/messages", async (req, res) => {
-    const limit = Number(req.query.limit);
     const { user } = req.headers;
     const messages = await db.collection("messages").find().toArray();
+    let limit;
 
-    // if (limit < 1 || isNaN(limit)) {
-    //     res.status(422).send("Limite inválido")
-    //     return;
-    // }
+    if (req.query.limit) {
+        limit = parseInt(req.query.limit);
+        if (limit < 1 || isNaN(limit)) {
+            res.status(422).send("Limite inválido")
+            return;
+        }
+    }
+
+
 
     let userMessages = messages.filter((message) =>
         message.user === user ||
@@ -138,7 +143,8 @@ app.get("/messages", async (req, res) => {
         message.to === user ||
         message.type === "status"
     );
-    res.send(userMessages)
+    res.send(userMessages.splice(-limit))
+
 })
 
 
