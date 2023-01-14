@@ -64,7 +64,7 @@ app.post("/participants", async (req, res) => {
         } catch {
             console.log("Error adding user")
         }
-        
+
     }
 })
 
@@ -74,10 +74,11 @@ app.get("/participants", (req, res) => {
 })
 
 //post messages
-app.post("/messages", (req, res) => {
+app.post("/messages", async (req, res) => {
     const { to, text, type } = req.body;
     const from = req.headers.user;
     const time = dayjs(Date.now()).format("hh:mm:ss");
+    let nameCheck;
 
 
     const messageSchema = Joi.object({
@@ -86,16 +87,38 @@ app.post("/messages", (req, res) => {
         type: Joi.string().valid("private_message", "message").required()
     })
 
+    const messageValidation = messageSchema.validate({ to, text, type });
 
-    db.collection("messages").insertOne({
+    if (messageValidation.error) {
+        res.status(422).send(messageValidation.error.details);
+        return;
+    }
 
-    }).then(() => {
-        res.status(201);
-    }).catch(() => {
-        res.status(401);
-    })
-})
+    try {
+        nameCheck = await db.collection("participants").findOne({ from })
+    } catch {
+        console.log("Error checking user name");
+        nameCheck = false;
+    }
 
+    if (!nameCheck) {
+        res.status(422).send("Usuário não encontrado")
+        return;
+    }
+
+    try {
+        await db.collection("messages").insertOne({
+            from,
+            to,
+            text,
+            type,
+            time,
+        });
+        res.status(201).send("Mensagem enviada");
+    } catch {
+        res.status(422).send("Send Message Error");
+    }
+});
 
 
 
