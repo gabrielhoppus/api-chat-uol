@@ -134,8 +134,6 @@ app.get("/messages", async (req, res) => {
         }
     }
 
-
-
     let userMessages = messages.filter((message) =>
         message.user === user ||
         message.to === "Todos" ||
@@ -144,14 +142,31 @@ app.get("/messages", async (req, res) => {
         message.type === "status"
     );
 
-
-
-
     res.send(userMessages.splice(-limit).reverse())
 
 })
 
+app.post("/status", async (req, res) => {
+    const { user } = req.headers;
+    const time = Date.now();
+    const userConnected = await db.collection("participants").findOne({ name: user });
+    const participantStatus = { name: user, lastStatus: time };
 
+    if (!userConnected){
+        res.status(404).send("Usuário não encontrado");
+        return;
+    }
+
+    try{
+        await db.collection("participants").updateOne({name: user}, {$set: participantStatus})
+        res.status(200).send("Participante atualizado com sucesso")
+    } catch{
+        console.log("Error updating user")
+    }
+
+
+
+})
 
 
 
