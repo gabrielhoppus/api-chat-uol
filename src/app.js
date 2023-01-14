@@ -35,7 +35,8 @@ app.post("/participants", async (req, res) => {
     const nameValidation = nameSchema.validate({ name });
 
     if (nameValidation.error) {
-        return res.status(422).send(nameValidation.error.details)
+        res.status(422).send(nameValidation.error.details);
+        return;
     }
 
     try {
@@ -47,6 +48,7 @@ app.post("/participants", async (req, res) => {
 
     if (nameCheck) {
         res.status(409).send("Esse usuário já está cadastrado, tente outro nome.");
+        return;
     } else {
         try {
             const participant = { name, lastStatus: Date.now() };
@@ -58,10 +60,11 @@ app.post("/participants", async (req, res) => {
                 type: "status",
                 time: date,
             });
+            res.status(201).send("Usuário criado com sucesso!")
         } catch {
             console.log("Error adding user")
         }
-        res.status(201)
+        
     }
 })
 
@@ -70,21 +73,38 @@ app.get("/participants", (req, res) => {
     db.collection("participants").find().toArray().then(dados => { return res.send(dados) }).catch(() => { res.status(500).send("Erro!") });
 })
 
+//post messages
+app.post("/messages", (req, res) => {
+    const { to, text, type } = req.body;
+    const from = req.headers.user;
+    const time = dayjs(Date.now()).format("hh:mm:ss");
+
+
+    const messageSchema = Joi.object({
+        to: Joi.string().required(),
+        text: Joi.string().required(),
+        type: Joi.string().valid("private_message", "message").required()
+    })
+
+
+    db.collection("messages").insertOne({
+
+    }).then(() => {
+        res.status(201);
+    }).catch(() => {
+        res.status(401);
+    })
+})
+
 
 
 
 // //get messages
 // db.collection("messages").find().toArray().then();
 
-// //post messages
-// const { } = req.body
-// db.collection("messages").insertOne({
 
-// }).then(() => {
-//     res.status(201);
-// }).catch(() => {
-//     res.status(401);
-// })
+
+
 
 
 
