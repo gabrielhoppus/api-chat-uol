@@ -16,7 +16,7 @@ let db;
 
 client.connect()
     .then(() => {
-        db = client.db("mydb");
+        db = client.db();
         console.log("Sucesso");
     })
     .catch((err) => {
