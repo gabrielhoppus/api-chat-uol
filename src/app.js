@@ -79,7 +79,6 @@ app.get("/participants", (req, res) => {
         .catch(() => { res.status(500).send("Erro!") });
 });
 
-
 app.post("/messages", async (req, res) => {
     let { to, text, type } = req.body;
     let from = req.headers.user;
@@ -177,8 +176,9 @@ app.post("/status", async (req, res) => {
 app.delete("/messages/:id", async (req, res) => {
     try {
         const { id } = req.params;
-        const { user } = req.headers;
+        let { user } = req.headers;
         const userMessages = await db.collection("messages").findOne({ _id: ObjectId(id) });
+        user = stripHtml(user).result.trim()
 
         if (!userMessages) {
             res.status(404).send("Mensagem não encontrada, tente novamente");
@@ -196,10 +196,12 @@ app.delete("/messages/:id", async (req, res) => {
 
 app.put("/messages/:id", async (req, res) => {
     const { id } = req.params;
-    const message = req.body;
+    let message = req.body;
     const originalMessage = await db.collection("messages").findOne({ _id: ObjectId(id) });
     const { user } = req.headers;
     const userRegistered = await db.collection("participants").findOne({ name: user });
+
+    message.type = stripHtml(message.type).result.trim()
 
     const messageSchema = Joi.object({
         to: Joi.string().required(),
