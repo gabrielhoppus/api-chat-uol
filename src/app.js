@@ -26,7 +26,8 @@ client.connect()
 
 
 app.post("/participants", async (req, res) => {
-    const { name } = req.body;
+    let { name } = req.body;
+    name = stripHtml(name).result.trim();
     let nameCheck;
 
     const nameSchema = Joi.object({
@@ -52,7 +53,6 @@ app.post("/participants", async (req, res) => {
         return;
     } else {
         try {
-            name = stripHtml(name).result.trim();
             const participant = { name, lastStatus: Date.now() };
             await db.collection("participants").insertOne(participant);
             await db.collection("messages").insertOne({
@@ -80,8 +80,12 @@ app.get("/participants", (req, res) => {
 
 
 app.post("/messages", async (req, res) => {
-    const { to, text, type } = req.body;
-    const from = req.headers.user;
+    let { to, text, type } = req.body;
+    let from = req.headers.user;
+    to = stripHtml(to).result.trim();
+    text = stripHtml(text).result.trim();
+    type = stripHtml(type).result.trim();
+    from = stripHtml(from).result.trim();
     const time = dayjs(Date.now()).format("hh:mm:ss");
     let nameCheck;
 
@@ -111,10 +115,6 @@ app.post("/messages", async (req, res) => {
         return;
     }
     try {
-        to = stripHtml(to).result.trim();
-        text = stripHtml(text).result.trim();
-        type = stripHtml(type).result.trim();
-        from = stripHtml(from).result.trim();
         await db.collection("messages").insertOne({
             to,
             text,
