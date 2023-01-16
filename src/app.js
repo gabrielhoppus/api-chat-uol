@@ -1,12 +1,12 @@
 import express from "express";
 import cors from "cors";
-import { MongoClient } from "mongodb";
+import { MongoClient, ObjectId } from "mongodb";
 import dayjs from "dayjs";
 import dotenv from "dotenv";
 import Joi from "joi";
 
 dotenv.config();
-const date = dayjs().format("hh:mm:ss")
+const date = dayjs().format("hh:mm:ss");
 const app = express();
 app.use(express.json());
 app.use(cors());
@@ -42,7 +42,7 @@ app.post("/participants", async (req, res) => {
     try {
         nameCheck = await db.collection("participants").findOne({ name });
     } catch {
-        console.log("Error checking user name")
+        console.log("Error checking user name");
         nameCheck = false;
     }
 
@@ -60,18 +60,21 @@ app.post("/participants", async (req, res) => {
                 type: "status",
                 time: date,
             });
-            res.status(201).send("Usuário criado com sucesso!")
+            res.status(201).send("Usuário criado com sucesso!");
         } catch {
-            console.log("Error adding user")
+            console.log("Error adding user");
         }
 
     }
-})
+});
 
-//get participants
 app.get("/participants", (req, res) => {
-    db.collection("participants").find().toArray().then(dados => { return res.send(dados) }).catch(() => { res.status(500).send("Erro!") });
-})
+    db.collection("participants")
+        .find()
+        .toArray()
+        .then(dados => { return res.send(dados) })
+        .catch(() => { res.status(500).send("Erro!") });
+});
 
 
 app.post("/messages", async (req, res) => {
@@ -85,7 +88,7 @@ app.post("/messages", async (req, res) => {
         to: Joi.string().required(),
         text: Joi.string().required(),
         type: Joi.string().valid("private_message", "message").required()
-    })
+    });
 
     const messageValidation = messageSchema.validate({ to, text, type });
 
@@ -102,7 +105,7 @@ app.post("/messages", async (req, res) => {
     }
 
     if (!nameCheck) {
-        res.status(422).send("Usuário não encontrado")
+        res.status(422).send("Usuário não encontrado");
         return;
     }
 
@@ -129,12 +132,12 @@ app.get("/messages", async (req, res) => {
     if (req.query.limit) {
         limit = parseInt(req.query.limit);
         if (limit < 1 || isNaN(limit)) {
-            res.status(422).send("Limite inválido")
+            res.status(422).send("Limite inválido");
             return;
         }
     }
 
-    let userMessages = messages.filter((message) =>
+    const userMessages = messages.filter((message) =>
         message.user === user ||
         message.to === "Todos" ||
         message.from === user ||
@@ -142,9 +145,9 @@ app.get("/messages", async (req, res) => {
         message.type === "status"
     );
 
-    res.send(userMessages.splice(-limit).reverse())
+    res.send(userMessages.splice(-limit).reverse());
 
-})
+});
 
 app.post("/status", async (req, res) => {
     const { user } = req.headers;
@@ -158,11 +161,65 @@ app.post("/status", async (req, res) => {
     }
 
 
-    await db.collection("participants").updateOne({ name: user }, { $set: participantStatus })
-    res.status(200).send("Participante atualizado com sucesso")
+    await db.collection("participants").updateOne({ name: user }, { $set: participantStatus });
+    res.status(200).send("Participante atualizado com sucesso");
 
-})
+});
 
+app.delete("/messages/:id", async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { user } = req.headers;
+        const userMessages = await db.collection("messages").findOne({ _id: ObjectId(id) });
+
+        if (!userMessages) {
+            res.status(404).send("Mensagem não encontrada, tente novamente");
+            return;
+        } else if (userMessages.from !== user) {
+            res.status(401).send("Esse usuário não é o dono da mensagem, tente outro");
+            return;
+        }
+        await db.collection("messages").deleteOne({ _id: ObjectId(id) });
+        res.status(200).send("Mensagem deletada com sucesso");
+    } catch {
+        res.sendStatus(500);
+    }
+});
+
+app.put("/messages/:id", async (req, res) => {
+    const { id } = req.params;
+    const message = req.body;
+    const originalMessage = await db.collection("messages").findOne({ _id: ObjectId(id) });
+    const { user } = req.headers;
+    const userRegistered = await db.collection("participants").findOne({ name: user });
+
+    const messageSchema = Joi.object({
+        to: Joi.string().required(),
+        text: Joi.string().required(),
+        type: Joi.string().valid("private_message", "message").required()
+    });
+
+    if (!messageSchema || !userRegistered) {
+        res.sendStatus(422);
+        return;
+    } else if (!originalMessage) {
+        res.sendStatus(404);
+        return;
+    } else if (originalMessage.from !== user) {
+        res.status(401).send("Esse usuário não é o dono da mensagem, tente outro");
+        return;
+    }
+
+    try {
+        await db
+            .collection("messages")
+            .updateOne({ _id: ObjectId(id) }, {$set: message});
+        res.status(200).send("Mensagem editada com sucesso");
+    } catch {
+        res.sendStatus(500);
+    }
+
+});
 
 setInterval(
     async function removeInactive() {
@@ -176,9 +233,9 @@ setInterval(
                 .deleteOne({ name: user.name });
             await db.collection("messages")
                 .insertOne({ from: user.name, to: "Todos", text: "sai da sala...", type: "status", time: time, });
-        })
+        });
     }
-    , 15000)
+    , 15000);
 
 
 
