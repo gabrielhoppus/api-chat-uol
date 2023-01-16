@@ -27,7 +27,6 @@ client.connect()
 
 app.post("/participants", async (req, res) => {
     let { name } = req.body;
-    name = stripHtml(name).result.trim();
     let nameCheck;
 
     const nameSchema = Joi.object({
@@ -47,6 +46,8 @@ app.post("/participants", async (req, res) => {
         console.log("Error checking user name");
         nameCheck = false;
     }
+
+    name = stripHtml(name).result.trim();
 
     if (nameCheck) {
         res.status(409).send("Esse usuário já está cadastrado, tente outro nome.");
@@ -82,10 +83,6 @@ app.get("/participants", (req, res) => {
 app.post("/messages", async (req, res) => {
     let { to, text, type } = req.body;
     let from = req.headers.user;
-    to = stripHtml(to).result.trim();
-    text = stripHtml(text).result.trim();
-    type = stripHtml(type).result.trim();
-    from = stripHtml(from).result.trim();
     const time = dayjs(Date.now()).format("hh:mm:ss");
     let nameCheck;
 
@@ -109,6 +106,11 @@ app.post("/messages", async (req, res) => {
         console.log("Error checking user name");
         nameCheck = false;
     }
+
+    to = stripHtml(to).result.trim();
+    text = stripHtml(text).result.trim();
+    type = stripHtml(type).result.trim();
+    from = stripHtml(from).result.trim();
 
     if (!nameCheck) {
         res.status(422).send("Usuário não encontrado");
