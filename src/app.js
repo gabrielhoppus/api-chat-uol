@@ -157,7 +157,7 @@ app.get("/messages", async (req, res) => {
 });
 
 app.post("/status", async (req, res) => {
-    const { user } = req.headers;
+    let { user } = req.headers;
     const time = Date.now();
     const userConnected = await db.collection("participants").findOne({ name: user });
     const participantStatus = { name: user, lastStatus: time };
@@ -166,6 +166,8 @@ app.post("/status", async (req, res) => {
         res.status(404).send("Usuário não encontrado");
         return;
     }
+
+    user = stripHtml(user).result.trim();
 
 
     await db.collection("participants").updateOne({ name: user }, { $set: participantStatus });
