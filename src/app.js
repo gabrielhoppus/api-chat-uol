@@ -4,6 +4,7 @@ import { MongoClient, ObjectId } from "mongodb";
 import dayjs from "dayjs";
 import dotenv from "dotenv";
 import Joi from "joi";
+import { stripHtml } from "string-strip-html";
 
 dotenv.config();
 const date = dayjs().format("hh:mm:ss");
@@ -50,6 +51,7 @@ app.post("/participants", async (req, res) => {
         res.status(409).send("Esse usuário já está cadastrado, tente outro nome.");
         return;
     } else {
+        name = stripHtml(name).result.trim();
         try {
             const participant = { name, lastStatus: Date.now() };
             await db.collection("participants").insertOne(participant);
@@ -108,6 +110,11 @@ app.post("/messages", async (req, res) => {
         res.status(422).send("Usuário não encontrado");
         return;
     }
+
+    to = stripHtml(to).result.trim();
+    text = stripHtml(text).result.trim();
+    type = stripHtml(type).result.trim();
+    from = stripHtml(from).result.trim();
 
     try {
         await db.collection("messages").insertOne({
