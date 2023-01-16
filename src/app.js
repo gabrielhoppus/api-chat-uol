@@ -98,6 +98,9 @@ app.post("/messages", async (req, res) => {
     if (messageValidation.error) {
         res.status(422).send(messageValidation.error.details);
         return;
+    }else if (from === "") {
+        res.sendStatus(422);
+        return;
     }
 
     try {
@@ -166,9 +169,6 @@ app.post("/status", async (req, res) => {
         res.status(404).send("Usuário não encontrado");
         return;
     }
-
-    user = stripHtml(user).result.trim();
-
 
     await db.collection("participants").updateOne({ name: user }, { $set: participantStatus });
     res.status(200).send("Participante atualizado com sucesso");
