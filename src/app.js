@@ -98,9 +98,6 @@ app.post("/messages", async (req, res) => {
     if (messageValidation.error) {
         res.status(422).send(messageValidation.error.details);
         return;
-    }else if (from === "") {
-        res.sendStatus(422);
-        return;
     }
 
     try {
@@ -110,15 +107,17 @@ app.post("/messages", async (req, res) => {
         nameCheck = false;
     }
 
+    if (!nameCheck) {
+        res.status(422).send("Usuário não encontrado");
+        return;
+    }
+
+    
     to = stripHtml(to).result.trim();
     text = stripHtml(text).result.trim();
     type = stripHtml(type).result.trim();
     from = stripHtml(from).result.trim();
 
-    if (!nameCheck) {
-        res.status(422).send("Usuário não encontrado");
-        return;
-    }
     try {
         await db.collection("messages").insertOne({
             to,
